@@ -1,0 +1,67 @@
+{
+	"ECF": {
+		"Encabezado": {
+			"Version": "1.0",
+			"IdDoc": {
+				"TipoeCF": "31",
+				"eNCF": "E310000000035",
+				"FechaVencimientoSecuencia": "31-12-2025",
+				"IndicadorEnvioDiferido": "1",
+				"IndicadorMontoGravado": "0",
+				"TipoIngresos": "01",
+				"TipoPago": "1"
+			},
+			"Emisor": {
+				"RNCEmisor": "130322791",
+				"RazonSocialEmisor": "DOCUMENTOS ELECTRONICOS DE 02",
+				"NombreComercial": "DOCUMENTOS ELECTRONICOS DE 02",
+				"DireccionEmisor": "AVE. ISABEL AGUIAR NO. 269, ZONA INDUSTRIAL DE HERRERA",
+				"Municipio": "010101",
+				"Provincia": "010000",
+				"CorreoEmisor": "DOCUMENTOSELECTRONICOSDE0612345678969789+9000000000000000000000000000001@123.COM",
+				"WebSite": "www.facturaelectronica.com",
+				"CodigoVendedor": "AA0000000100000000010000000002000000000300000000050000000006",
+				"NumeroFacturaInterna": "123456789016",
+				"NumeroPedidoInterno": "123456789016",
+				"ZonaVenta": "NORT",
+				"FechaEmision": "01-04-2020"
+			},
+			"Comprador": {
+				"RNCComprador": "131880681",
+				"RazonSocialComprador": "DOCUMENTOS ELECTRONICOS DE 03",
+				"ContactoComprador": "MARCOS LATIPLOL",
+				"CorreoComprador": "MARCOSLATIPLOL@KKKK.COM",
+				"DireccionComprador": "CALLE JACINTO DE LA CONCHA FELIZ ESQUINA 27 DE FEBRERO,FRENTE A DOMINO",
+				"MunicipioComprador": "010100",
+				"ProvinciaComprador": "010000",
+				"FechaEntrega": "10-10-2020",
+				"FechaOrdenCompra": "10-11-2018",
+				"NumeroOrdenCompra": "4500352238",
+				"CodigoInternoComprador": "10633440"
+			},
+			"Totales": {
+				"MontoGravadoTotal": "6000.00",
+				"MontoGravadoI1": "6000.00",
+				"ITBIS1": "18",
+				"TotalITBIS": "1080.00",
+				"TotalITBIS1": "1080.00",
+				"MontoTotal": "7080.00"
+			}
+		},
+		"DetallesItems": {
+			"Item": [
+				{
+				"NumeroLinea": "1",
+				"IndicadorFacturacion": "1",
+				"NombreItem": "ASW DTU",
+				"IndicadorBienoServicio": "1",
+				"CantidadItem": "15.00",
+				"UnidadMedida": "31",
+				"PrecioUnitarioItem": "400.00",
+				"MontoItem": "6000.00"
+				}
+					]
+		},
+		"FechaHoraFirma": "01-03-2025 05:07:00"
+	}
+}

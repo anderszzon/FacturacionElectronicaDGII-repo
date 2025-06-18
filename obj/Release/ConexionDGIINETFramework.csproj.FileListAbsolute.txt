@@ -1,0 +1,10 @@
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\bin\Release\ConexionDGII.dll
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\bin\Release\ConexionDGII.pdb
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\bin\Release\Newtonsoft.Json.dll
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\bin\Release\System.Security.Cryptography.Cng.dll
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\bin\Release\System.Security.Cryptography.OpenSsl.dll
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\obj\Release\ConexionDGIINETFramework.csproj.AssemblyReference.cache
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\obj\Release\ConexionDGIINETFramework.csproj.CoreCompileInputs.cache
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\obj\Release\Conexion.CCCCA05F.Up2Date
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\obj\Release\ConexionDGII.dll
+C:\Users\andersonmgordilloh\source\repos\FacturacionElectronicaDGII\obj\Release\ConexionDGII.pdb

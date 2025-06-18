@@ -1,0 +1,102 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ConexionDGIINETFramework.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ConexionDGIINETFramework.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ConexionDGIINETFramework.csproj",
+        "projectName": "ConexionDGII",
+        "projectPath": "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ConexionDGIINETFramework.csproj",
+        "packagesPath": "C:\\Users\\andersonmgordilloh\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\obj\\",
+        "projectStyle": "PackageReference",
+        "skipContentFileWrite": true,
+        "UsingMicrosoftNETSdk": false,
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\andersonmgordilloh\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "projectReferences": {}
+          }
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1, )"
+            },
+            "System.Security.Cryptography.Algorithms": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
+            "System.Security.Cryptography.Cng": {
+              "target": "Package",
+              "version": "[4.2.0, )"
+            },
+            "System.Security.Cryptography.Csp": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "System.Security.Cryptography.Encoding": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "System.Security.Cryptography.OpenSsl": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "System.Security.Cryptography.Primitives": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            },
+            "System.Security.Cryptography.X509Certificates": {
+              "target": "Package",
+              "version": "[4.1.2, )"
+            },
+            "runtime.native.System.Security.Cryptography": {
+              "target": "Package",
+              "version": "[4.0.0, )"
+            }
+          }
+        }
+      },
+      "runtimes": {
+        "win": {
+          "#import": []
+        },
+        "win-arm64": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
+          "#import": []
+        }
+      }
+    }
+  }
+}

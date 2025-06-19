@@ -227,13 +227,13 @@ namespace ConexionDGII
                 Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
 
                 invoice = "Aprobacion Comercial Firmada";
-                return invoice; // Devuelve el JSON como string
+                return invoice; 
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
-                return $"Error: {ex.Message}"; // ✅ Devuelve error como string
+                return $"Error: {ex.Message}";
             }
         }
 

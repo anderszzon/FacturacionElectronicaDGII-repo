@@ -34,6 +34,12 @@ namespace ConexionDGII
         private static string _XMLFacturaFirmada;
         private static string _CodigoSeguridad;
 
+        private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
+
+        //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
+        //string jsonInvoiceLocal = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\invoice.json"; // Ruta del JSON
+        //string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobal}{_eNCFGlobal}.xml"; // Archivo firmado
+        //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
@@ -81,8 +87,6 @@ namespace ConexionDGII
 
         public static async Task<string> FirmarSemilla(string passCert, string jsonInvoiceFO)
         {
-            string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-            string jsonInvoiceLocal = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\invoice.json"; // Ruta del JSON
 
             try
             {
@@ -96,13 +100,9 @@ namespace ConexionDGII
                 string xmlSemillaFirmada = xmlDoc.OuterXml;
                 _XMLSemillaFirmada = xmlSemillaFirmada;
                 
-                string jsonContent = File.ReadAllText(jsonInvoiceLocal);
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //string jsonContent = File.ReadAllText(jsonInvoiceLocal);
 
                 JObject jsonObj = JObject.Parse(jsonInvoiceFO);
-
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
                 _eNCFGlobal = jsonObj["ECF"]["Encabezado"]["IdDoc"]["eNCF"]?.ToString();
                 _RNCEmisorGlobal = jsonObj["ECF"]["Encabezado"]["Emisor"]["RNCEmisor"]?.ToString();
@@ -118,8 +118,6 @@ namespace ConexionDGII
 
                 string xmlFacturaFirmada = await FirmarFactura(passCert);
 
-                /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
                 return jsonInvoiceFO; 
 
             }
@@ -133,8 +131,6 @@ namespace ConexionDGII
 
         public static async Task<string> FirmarFactura(string passCert)
         {
-            string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobal}{_eNCFGlobal}.xml"; // Archivo firmado
-            string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
 
             try
             {
@@ -144,8 +140,8 @@ namespace ConexionDGII
 
                 SignXmlInvoice(xmlDoc, pathCert, passCert);
 
-                xmlDoc.Save(signedXmlPath);
-                Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
+                //xmlDoc.Save(signedXmlPath);
+                //Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
 
                 string xmlFacturaFirmada = xmlDoc.OuterXml;
 
@@ -197,43 +193,6 @@ namespace ConexionDGII
             else
             {
                 throw new Exception("El nodo SignatureValue no se encontró en el XML.");
-            }
-        }
-
-        public static async Task<string> FirmarAprobacionComercial(string passCert)
-        {
-            string xmlPath = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.xml";  // Ruta donde tienes tu semilla
-            string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobalAC}{_eNCFGlobalAC}.xml"; // Archivo firmado
-            string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-
-            string invoice;
-
-            try
-            {
-                // X509Certificate2 cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
-
-                XmlDocument xmlDoc = new XmlDocument();
-                //xmlDoc.PreserveWhitespace = true;
-                xmlDoc.Load(xmlPath);
-
-                //SignXmlRepo(xmlDoc, pathCert, passCert);
-
-
-                SignXmlSeed(xmlDoc, pathCert, passCert);
-
-
-                // Guardar el XML firmado
-                xmlDoc.Save(signedXmlPath);
-                Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
-
-                invoice = "Aprobacion Comercial Firmada";
-                return invoice; 
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message);
-                return $"Error: {ex.Message}";
             }
         }
 
@@ -354,7 +313,7 @@ namespace ConexionDGII
         public static async Task<string> ValidarSemilla(string urlValidarSemilla, string urlRecepcionFactura, string urlConsultaFactura)
         {
 
-            string filePath = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\semillaFirmada.xml"; // Ruta donde guardar el archivo
+            string fileName = "semillaFirmada.xml"; 
 
             try
             {
@@ -370,8 +329,9 @@ namespace ConexionDGII
                         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
 
                         // Agregar el archivo al formulario con el nombre "xml"
-                        form.Add(fileContent, "xml", Path.GetFileName(filePath));
+                        form.Add(fileContent, "xml", Path.GetFileName(fileName));
 
+                        // Agregar encabezados
                         // Agregar encabezados
                         client.DefaultRequestHeaders.Add("accept", "application/json");
 
@@ -411,7 +371,7 @@ namespace ConexionDGII
         public static async Task<string> EnviarFacturaElectronica(string urlRecepcionFactura, string urlConsultaFactura)
         {
 
-            string xmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobal}{_eNCFGlobal}.xml"; // Ruta del XML
+            string xmlPath = $"{_RNCEmisorGlobal}{_eNCFGlobal}.xml"; 
 
             try
             {
@@ -425,8 +385,13 @@ namespace ConexionDGII
                     // Crear el contenido multipart/form-data
                     using (var form = new MultipartFormDataContent())
                     {
-                        // Leer el archivo XML
-                        var fileContent = new ByteArrayContent(File.ReadAllBytes(xmlPath));
+                        //// Leer el archivo XML
+                        //var fileContent = new ByteArrayContent(File.ReadAllBytes(_XMLFacturaFirmada));
+                        //fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
+
+                        byte[] xmlBytes = Encoding.UTF8.GetBytes(_XMLFacturaFirmada);
+
+                        var fileContent = new ByteArrayContent(xmlBytes);
                         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
 
                         // Agregar el archivo al formulario
@@ -506,6 +471,45 @@ namespace ConexionDGII
                 Console.WriteLine($" Error: {ex.Message}");
                 return $" Error: {ex.Message}"; // Retorna el error
 
+            }
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static async Task<string> FirmarAprobacionComercial(string passCert)
+        {
+            string xmlPath = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.xml";  // Ruta donde tienes tu semilla
+            string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobalAC}{_eNCFGlobalAC}.xml"; // Archivo firmado
+            string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
+
+            string invoice;
+
+            try
+            {
+                // X509Certificate2 cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+
+                XmlDocument xmlDoc = new XmlDocument();
+                //xmlDoc.PreserveWhitespace = true;
+                xmlDoc.Load(xmlPath);
+
+                //SignXmlRepo(xmlDoc, pathCert, passCert);
+
+
+                SignXmlSeed(xmlDoc, pathCert, passCert);
+
+
+                // Guardar el XML firmado
+                xmlDoc.Save(signedXmlPath);
+                Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
+
+                invoice = "Aprobacion Comercial Firmada";
+                return invoice;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                return $"Error: {ex.Message}";
             }
         }
 

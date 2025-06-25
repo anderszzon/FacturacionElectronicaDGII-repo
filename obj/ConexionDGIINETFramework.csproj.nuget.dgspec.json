@@ -92,7 +92,16 @@
         }
       },
       "runtimes": {
-        "linux-x64": {
+        "win": {
+          "#import": []
+        },
+        "win-arm64": {
+          "#import": []
+        },
+        "win-x64": {
+          "#import": []
+        },
+        "win-x86": {
           "#import": []
         }
       }

@@ -35,12 +35,9 @@ namespace ConexionDGII
         private static string _CodigoSeguridad;
 
         private static string pathCertp12 = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-        private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; // Ruta de tu certificado
 
-        //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-        //string jsonInvoiceLocal = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\invoice.json"; // Ruta del JSON
-        //string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobal}{_eNCFGlobal}.xml"; // Archivo firmado
-        //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
+        // AQUI ESTA DEFINIDA LA RUTA DEL  CERTIFICADO PFX QUE NECESITO EN LOCAL (WORK/PERSONAL)
+        private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; // Ruta de tu certificado
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
@@ -481,7 +478,7 @@ namespace ConexionDGII
         {
             string xmlPath = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.xml";  // Ruta donde tienes tu semilla
             string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobalAC}{_eNCFGlobalAC}.xml"; // Archivo firmado
-            string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
+            //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
 
             string invoice;
 

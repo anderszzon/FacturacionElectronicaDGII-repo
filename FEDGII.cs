@@ -38,10 +38,10 @@ namespace ConexionDGII
 
         
         // AQUI ESTA DEFINIDA LA RUTA DEL  CERTIFICADO PFX QUE NECESITO EN LOCAL (WORK/PERSONAL)
-        //comment
-        private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
-        //private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; 
-        
+
+        //private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
+        private static string pathCert = "C:\\Users\\home\\source\\repos\\FacturacionElectronicaDGII-repo\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; 
+
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();

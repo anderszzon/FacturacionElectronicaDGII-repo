@@ -36,16 +36,47 @@ namespace ConexionDGII
 
         private static string pathCertp12 = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
 
-        
+
         // AQUI ESTA DEFINIDA LA RUTA DEL  CERTIFICADO PFX QUE NECESITO EN LOCAL (WORK/PERSONAL)
+
+
+        // POWERSHELL  COMMAND 
+        // az webapp config appsettings set --name <app-name> --resource-group <resource-group-name> --settings WEBSITE_LOAD_CERTIFICATES=<comma-separated-certificate-thumbprints>
 
         private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
         //private static string pathCert = "C:\\Users\\home\\source\\repos\\FacturacionElectronicaDGII-repo\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; 
+
+
+        // Agregar variable para el thumbprint del certificado
+        private static string _certificateThumbprint = "E661583E8FABEF4C0BEF694CBC41C28FB81CD870";
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();
         }
+
+
+        // Método para obtener el certificado desde el almacén
+        private static X509Certificate2 GetCertificateFromStore(string thumbprint)
+        {
+            using (X509Store certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                certStore.Open(OpenFlags.ReadOnly);
+
+                X509Certificate2Collection certCollection = certStore.Certificates.Find(
+                    X509FindType.FindByThumbprint,
+                    thumbprint,
+                    validOnly: false);
+
+                X509Certificate2 cert = certCollection.OfType<X509Certificate2>().FirstOrDefault();
+
+                if (cert is null)
+                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found");
+
+                return cert;
+            }
+        }
+
 
         public static async Task<string> ObtenerSemilla(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
@@ -242,6 +273,8 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
+            //var certAzure = GetCertificateFromStore(_certificateThumbprint);
+
             if (!File.Exists(pathCert))
                 throw new FileNotFoundException("El certificado para firma no existe", pathCert);
 

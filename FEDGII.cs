@@ -48,7 +48,8 @@ namespace ConexionDGII
 
 
         // Agregar variable para el thumbprint del certificado
-        private static string _certificateThumbprint = "E661583E8FABEF4C0BEF694CBC41C28FB81CD870";
+        //private static string _certificateThumbprint = "E661583E8FABEF4C0BEF694CBC41C28FB81CD870";
+        private static string _certificateThumbprint = "2BF6F9D3FF06FB3A4B5813885FF252BCB055AB6F";
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
@@ -273,12 +274,12 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
-            //var certAzure = GetCertificateFromStore(_certificateThumbprint);
+            var cert = GetCertificateFromStore(_certificateThumbprint);
 
             if (!File.Exists(pathCert))
                 throw new FileNotFoundException("El certificado para firma no existe", pathCert);
 
-            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");

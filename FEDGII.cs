@@ -57,9 +57,10 @@ namespace ConexionDGII
         }
 
 
-        // Método para obtener el certificado desde el almacén
+        // Método para obtener el certificado desde el almacén 
         private static X509Certificate2 GetCertificateFromStore(string thumbprint)
         {
+
             using (X509Store certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser))
             {
                 certStore.Open(OpenFlags.ReadOnly);
@@ -72,12 +73,111 @@ namespace ConexionDGII
                 X509Certificate2 cert = certCollection.OfType<X509Certificate2>().FirstOrDefault();
 
                 if (cert is null)
-                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found");
+                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found Anderzzon");
 
                 return cert;
             }
         }
 
+        private static X509Certificate2 GetCertificateFromStoreWINDOWS(string thumbprint)
+        {
+            using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly);
+
+                X509Certificate2Collection certCollection = store.Certificates.Find(
+                    X509FindType.FindByThumbprint,
+                    thumbprint,
+                    validOnly: false);
+
+                X509Certificate2 cert = certCollection.OfType<X509Certificate2>().FirstOrDefault();
+
+                if (cert == null)
+                {
+                    throw new Exception(
+                        $"❌ Certificado no encontrado. " +
+                        $"Thumbprint buscado: {thumbprint}. " +
+                        $"StoreName: {store.Name}, StoreLocation: {store.Location}, " +
+                        $"Total certificados en el store: {store.Certificates.Count}."
+                    );
+                }
+
+                if (cert != null)
+                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found Anderzzon");
+
+                return cert;
+            }
+        }
+
+        public static List<CertCheckResult> ListAllCertificates()
+        {
+            var results = new List<CertCheckResult>();
+
+            using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly);
+
+                foreach (var cert in store.Certificates.OfType<X509Certificate2>())
+                {
+                    results.Add(new CertCheckResult
+                    {
+                        Existe = true,
+                        Mensaje = $"Certificado encontrado en LocalMachine/My",
+                        Subject = cert.Subject,
+                        Thumbprint = cert.Thumbprint
+                    });
+                }
+            }
+
+            return results;
+        }
+
+
+
+        public class CertCheckResult
+        {
+            public bool Existe { get; set; }
+            public string Mensaje { get; set; }
+            public string Subject { get; set; }
+            public string Thumbprint { get; set; }
+        }
+
+        public static CertCheckResult GetCertificateFromStoreWINDOWS2(string thumbprint)
+        {
+            using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly);
+
+                var certs = store.Certificates.Find(
+                    X509FindType.FindByThumbprint,
+                    thumbprint,
+                    validOnly: false);
+
+                if (certs.Count > 0)
+                {
+                    var cert = certs[0];
+                    return new CertCheckResult
+                    {
+                        Existe = true,
+                        Mensaje = "✅ Certificado encontrado",
+                        Subject = cert.Subject,
+                        Thumbprint = cert.Thumbprint
+                    };
+                }
+                else
+                {
+                    return new CertCheckResult
+                    {
+                        Existe = false,
+                        Mensaje = $"❌ No se encontró el certificado con Thumbprint: {thumbprint}. " +
+                                  $"StoreName: My, StoreLocation: CurrentUser. " +
+                                  $"Total certificados en el store: {store.Certificates.Count}",
+                        Subject = null,
+                        Thumbprint = thumbprint
+                    };
+                }
+            }
+        }
 
         public static async Task<string> ObtenerSemilla(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
@@ -274,19 +374,20 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
-            var cert = GetCertificateFromStore(_certificateThumbprint);
+
+            var cert = GetCertificateFromStoreWINDOWS(_certificateThumbprint);
 
             if (!File.Exists(pathCert))
                 throw new FileNotFoundException("El certificado para firma no existe", pathCert);
 
             //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
-            if (cert.PrivateKey == null)
+            if (cert.PrivateKey != null)
                 throw new Exception("El certificado no contiene una clave privada.");
 
             var key = cert.GetRSAPrivateKey();
 
-            if (key == null)
+            if (key != null)
                 throw new Exception("No se pudo obtener la clave privada RSA del certificado.");
 
             var signedXml = new SignedXml(xmlDoc)

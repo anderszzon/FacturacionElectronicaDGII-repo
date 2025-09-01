@@ -231,15 +231,12 @@ namespace ConexionDGII
                 string xmlSemillaFirmada = xmlDoc.OuterXml;
                 _XMLSemillaFirmada = xmlSemillaFirmada;
 
-                Console.WriteLine("Firma Semilla Exitosa: " + _XMLSemillaFirmada);
+                Console.WriteLine(_XMLSemillaFirmada);
 
                 JObject jsonObj = JObject.Parse(jsonInvoiceFO);
 
                 _eNCFGlobal = jsonObj["ECF"]["Encabezado"]["IdDoc"]["eNCF"]?.ToString();
                 _RNCEmisorGlobal = jsonObj["ECF"]["Encabezado"]["Emisor"]["RNCEmisor"]?.ToString();
-
-                Console.WriteLine("Firma Semilla Exitosa: "  + _eNCFGlobal);
-                Console.WriteLine("Firma Semilla Exitosa: " + _RNCEmisorGlobal);
 
                 XmlDocument xmlDocument = JsonConvert.DeserializeXmlNode(jsonInvoiceFO);
 
@@ -287,6 +284,8 @@ namespace ConexionDGII
 
                 _XMLFacturaFirmada = xmlFacturaFirmada;
 
+                Console.WriteLine(_XMLFacturaFirmada);
+
                 return xmlFacturaFirmada;
 
             }
@@ -332,10 +331,9 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlInvoice(XmlDocument xmlDoc, string pathCert, string passCert)
         {
-            if (!File.Exists(pathCert))
-                throw new FileNotFoundException("El certificado para firma no existe", pathCert);
 
-            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            var cert = GetCertificateFromLinux();
+            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");
@@ -376,8 +374,8 @@ namespace ConexionDGII
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
 
-            //var cert = GetCertificateFromWINDOWS(_certificateThumbprint);
             var cert = GetCertificateFromLinux();
+            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");

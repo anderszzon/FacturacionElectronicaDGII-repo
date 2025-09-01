@@ -230,8 +230,8 @@ namespace ConexionDGII
 
                 string xmlSemillaFirmada = xmlDoc.OuterXml;
                 _XMLSemillaFirmada = xmlSemillaFirmada;
-                
-                //string jsonContent = File.ReadAllText(jsonInvoiceLocal);
+
+                Console.WriteLine("Firma Semilla Exitosa: " + _XMLSemillaFirmada);
 
                 JObject jsonObj = JObject.Parse(jsonInvoiceFO);
 

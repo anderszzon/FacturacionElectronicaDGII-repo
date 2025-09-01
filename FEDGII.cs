@@ -56,30 +56,28 @@ namespace ConexionDGII
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();
         }
 
-
-        // Método para obtener el certificado desde el almacén 
-        private static X509Certificate2 GetCertificateFromStore(string thumbprint)
+        public static X509Certificate2 GetCertificateFromLinux()
         {
+            var thumbprint = Environment.GetEnvironmentVariable("CERT_THUMBPRINT");
+            var password = Environment.GetEnvironmentVariable("CERT_PASSWORD");
+            var path = $"/var/ssl/private/{thumbprint}.p12";
 
-            using (X509Store certStore = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            if (!File.Exists(path))
             {
-                certStore.Open(OpenFlags.ReadOnly);
-
-                X509Certificate2Collection certCollection = certStore.Certificates.Find(
-                    X509FindType.FindByThumbprint,
-                    thumbprint,
-                    validOnly: false);
-
-                X509Certificate2 cert = certCollection.OfType<X509Certificate2>().FirstOrDefault();
-
-                if (cert is null)
-                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found Anderzzon");
-
-                return cert;
+                Console.WriteLine($"❌ No se encontró certificado en {path}");
+                return null;
             }
+
+            var cert = new X509Certificate2(path);
+
+            //var cert = new X509Certificate2(path, password,
+            //    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet);
+
+            Console.WriteLine($"✅ Certificado cargado en Linux: {cert.Subject}");
+            return cert;
         }
 
-        private static X509Certificate2 GetCertificateFromStoreWINDOWS(string thumbprint)
+        private static X509Certificate2 GetCertificateFromWINDOWS(string thumbprint)
         {
             using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
             {
@@ -240,6 +238,9 @@ namespace ConexionDGII
                 _eNCFGlobal = jsonObj["ECF"]["Encabezado"]["IdDoc"]["eNCF"]?.ToString();
                 _RNCEmisorGlobal = jsonObj["ECF"]["Encabezado"]["Emisor"]["RNCEmisor"]?.ToString();
 
+                Console.WriteLine("Firma Semilla Exitosa: "  + _eNCFGlobal);
+                Console.WriteLine("Firma Semilla Exitosa: " + _RNCEmisorGlobal);
+
                 XmlDocument xmlDocument = JsonConvert.DeserializeXmlNode(jsonInvoiceFO);
 
                 XmlDeclaration xmlDeclaration = xmlDocument.CreateXmlDeclaration("1.0", "utf-8", null);
@@ -375,19 +376,15 @@ namespace ConexionDGII
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
 
-            var cert = GetCertificateFromStoreWINDOWS(_certificateThumbprint);
+            //var cert = GetCertificateFromWINDOWS(_certificateThumbprint);
+            var cert = GetCertificateFromLinux();
 
-            if (!File.Exists(pathCert))
-                throw new FileNotFoundException("El certificado para firma no existe", pathCert);
-
-            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
-
-            if (cert.PrivateKey != null)
+            if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");
 
             var key = cert.GetRSAPrivateKey();
 
-            if (key != null)
+            if (key == null)
                 throw new Exception("No se pudo obtener la clave privada RSA del certificado.");
 
             var signedXml = new SignedXml(xmlDoc)

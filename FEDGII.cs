@@ -332,8 +332,8 @@ namespace ConexionDGII
         static XmlDocument SignXmlInvoice(XmlDocument xmlDoc, string pathCert, string passCert)
         {
 
-            var cert = GetCertificateFromLinux();
-            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            //var cert = GetCertificateFromLinux();
+            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");
@@ -374,8 +374,19 @@ namespace ConexionDGII
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
         {
 
-            var cert = GetCertificateFromLinux();
-            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            // Validar que los parámetros no sean nulos o vacíos
+            if (string.IsNullOrEmpty(pathCert))
+                throw new ArgumentException("La ruta del certificado no puede ser nula o vacía.", nameof(pathCert));
+
+            if (string.IsNullOrEmpty(passCert))
+                throw new ArgumentException("La contraseña del certificado no puede ser nula o vacía.", nameof(passCert));
+
+            // Validar que el archivo del certificado exista
+            if (!File.Exists(pathCert))
+                throw new FileNotFoundException($"No se encontró el archivo del certificado en la ruta: {pathCert}");
+
+            //var cert = GetCertificateFromLinux();
+            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");

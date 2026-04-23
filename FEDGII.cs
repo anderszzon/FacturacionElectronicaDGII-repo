@@ -101,7 +101,7 @@ namespace ConexionDGII
                 }
 
                 if (cert != null)
-                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found Anderzzon");
+                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found");
 
                 return cert;
             }
@@ -120,7 +120,7 @@ namespace ConexionDGII
                     results.Add(new CertCheckResult
                     {
                         Existe = true,
-                        Mensaje = $"Certificado encontrado en LocalMachine/My",
+                        Mensaje = $"Certificado encontrado",
                         Subject = cert.Subject,
                         Thumbprint = cert.Thumbprint
                     });

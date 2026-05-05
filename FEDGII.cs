@@ -43,7 +43,9 @@ namespace ConexionDGII
         // POWERSHELL  COMMAND 
         // az webapp config appsettings set --name <app-name> --resource-group <resource-group-name> --settings WEBSITE_LOAD_CERTIFICATES=<comma-separated-certificate-thumbprints>
 
-        private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
+        private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91"; // Reemplaza con el thumbprint de tu certificado
+
+        //private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
         //private static string pathCert = "C:\\Users\\home\\source\\repos\\FacturacionElectronicaDGII-repo\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; 
 
 
@@ -99,10 +101,6 @@ namespace ConexionDGII
                         $"Total certificados en el store: {store.Certificates.Count}."
                     );
                 }
-
-                if (cert != null)
-                    throw new Exception($"Certificate with thumbprint {thumbprint} was not found");
-
                 return cert;
             }
         }
@@ -226,7 +224,7 @@ namespace ConexionDGII
 
                 xmlDoc.LoadXml(_XMLSemilla);
 
-                SignXmlSeed(xmlDoc, pathCert, passCert);
+                SignXmlSeed(xmlDoc, thumbprint2026, passCert);
 
                 string xmlSemillaFirmada = xmlDoc.OuterXml;
                 _XMLSemillaFirmada = xmlSemillaFirmada;
@@ -269,7 +267,7 @@ namespace ConexionDGII
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.LoadXml(_XMLFactura);
 
-                SignXmlInvoice(xmlDoc, pathCert, passCert);
+                SignXmlInvoice(xmlDoc, thumbprint2026, passCert);
 
                 //xmlDoc.Save(signedXmlPath);
                 //Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
@@ -329,11 +327,13 @@ namespace ConexionDGII
             }
         }
 
-        static XmlDocument SignXmlInvoice(XmlDocument xmlDoc, string pathCert, string passCert)
+        static XmlDocument SignXmlInvoice(XmlDocument xmlDoc, string thumprint2026, string passCert)
         {
 
             //var cert = GetCertificateFromLinux();
-            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+
+            var cert = GetCertificateFromWINDOWS(thumprint2026);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");
@@ -371,22 +371,24 @@ namespace ConexionDGII
             return xmlDoc;
         }
 
-        static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string pathCert, string passCert)
+        static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string thumprint2026, string passCert)
         {
 
             // Validar que los parámetros no sean nulos o vacíos
-            if (string.IsNullOrEmpty(pathCert))
-                throw new ArgumentException("La ruta del certificado no puede ser nula o vacía.", nameof(pathCert));
+            //if (string.IsNullOrEmpty(pathCert))
+            //    throw new ArgumentException("La ruta del certificado no puede ser nula o vacía.", nameof(pathCert));
 
             if (string.IsNullOrEmpty(passCert))
                 throw new ArgumentException("La contraseña del certificado no puede ser nula o vacía.", nameof(passCert));
 
-            // Validar que el archivo del certificado exista
-            if (!File.Exists(pathCert))
-                throw new FileNotFoundException($"No se encontró el archivo del certificado en la ruta: {pathCert}");
+            // Validar que el archivo del certificado exista 
+            //if (!File.Exists(pathCert))
+            //    throw new FileNotFoundException($"No se encontró el archivo del certificado en la ruta: {pathCert}");
 
-            //var cert = GetCertificateFromLinux();
-            var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            // var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
+            // var certPruebas = GetCertificateFromStoreWINDOWS2("5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91");
+
+            var cert = GetCertificateFromWINDOWS(thumprint2026);
 
             if (cert.PrivateKey == null)
                 throw new Exception("El certificado no contiene una clave privada.");
@@ -637,7 +639,7 @@ namespace ConexionDGII
                 //SignXmlRepo(xmlDoc, pathCert, passCert);
 
 
-                SignXmlSeed(xmlDoc, pathCert, passCert);
+                SignXmlSeed(xmlDoc, thumbprint2026, passCert);
 
 
                 // Guardar el XML firmado

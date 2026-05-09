@@ -94,7 +94,7 @@ namespace ConexionDGII
             public string Thumbprint { get; set; }
         }
 
-        public static CertCheckResult GetCertificateFromStoreWINDOWS2(string thumbprint)
+        public static CertCheckResult FindCertificateFromWINDOWS(string thumbprint)
         {
             using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
             {

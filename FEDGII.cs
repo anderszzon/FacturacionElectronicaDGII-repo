@@ -5,16 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.Xml;
 using Newtonsoft.Json.Linq;
 using System.Security.Cryptography.Xml;
 using Newtonsoft.Json;
-using System.Xml.Linq;
-using System.Data.SqlTypes;
-
 
 namespace ConexionDGII
 {
@@ -34,49 +30,11 @@ namespace ConexionDGII
         private static string _XMLFacturaFirmada;
         private static string _CodigoSeguridad;
 
-        private static string pathCertp12 = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-
-
-        // AQUI ESTA DEFINIDA LA RUTA DEL  CERTIFICADO PFX QUE NECESITO EN LOCAL (WORK/PERSONAL)
-
-
-        // POWERSHELL  COMMAND 
-        // az webapp config appsettings set --name <app-name> --resource-group <resource-group-name> --settings WEBSITE_LOAD_CERTIFICATES=<comma-separated-certificate-thumbprints>
-
-        private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91"; // Reemplaza con el thumbprint de tu certificado
-
-        //private static string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx";
-        //private static string pathCert = "C:\\Users\\home\\source\\repos\\FacturacionElectronicaDGII-repo\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.pfx"; 
-
-
-        // Agregar variable para el thumbprint del certificado
-        //private static string _certificateThumbprint = "E661583E8FABEF4C0BEF694CBC41C28FB81CD870";
-        private static string _certificateThumbprint = "2BF6F9D3FF06FB3A4B5813885FF252BCB055AB6F";
+        private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91";
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();
-        }
-
-        public static X509Certificate2 GetCertificateFromLinux()
-        {
-            var thumbprint = Environment.GetEnvironmentVariable("CERT_THUMBPRINT");
-            var password = Environment.GetEnvironmentVariable("CERT_PASSWORD");
-            var path = $"/var/ssl/private/{thumbprint}.p12";
-
-            if (!File.Exists(path))
-            {
-                Console.WriteLine($"❌ No se encontró certificado en {path}");
-                return null;
-            }
-
-            var cert = new X509Certificate2(path);
-
-            //var cert = new X509Certificate2(path, password,
-            //    X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet);
-
-            Console.WriteLine($"✅ Certificado cargado en Linux: {cert.Subject}");
-            return cert;
         }
 
         private static X509Certificate2 GetCertificateFromWINDOWS(string thumbprint)
@@ -127,8 +85,6 @@ namespace ConexionDGII
 
             return results;
         }
-
-
 
         public class CertCheckResult
         {
@@ -269,9 +225,6 @@ namespace ConexionDGII
 
                 SignXmlInvoice(xmlDoc, thumbprint2026, passCert);
 
-                //xmlDoc.Save(signedXmlPath);
-                //Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
-
                 string xmlFacturaFirmada = xmlDoc.OuterXml;
 
                 XmlDocument xmlDoc2 = new XmlDocument();
@@ -303,10 +256,8 @@ namespace ConexionDGII
 
             if (signatureValueNode != null)
             {
-                //_CodigoSeguridad = signatureValueNode.InnerText;
                 string fullSignatureValue = signatureValueNode.InnerText;
 
-                // Validar que el valor tenga al menos 6 caracteres
                 if (fullSignatureValue.Length >= 6)
                 {
                     _CodigoSeguridad = fullSignatureValue.Substring(0, 6);
@@ -318,8 +269,6 @@ namespace ConexionDGII
 
                 return _CodigoSeguridad;
 
-                //return signatureValueNode.InnerText = _CodigoSeguridad;
-
             }
             else
             {
@@ -329,10 +278,6 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlInvoice(XmlDocument xmlDoc, string thumprint2026, string passCert)
         {
-
-            //var cert = GetCertificateFromLinux();
-            //var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
-
             var cert = GetCertificateFromWINDOWS(thumprint2026);
 
             if (cert.PrivateKey == null)
@@ -373,20 +318,8 @@ namespace ConexionDGII
 
         static XmlDocument SignXmlSeed(XmlDocument xmlDoc, string thumprint2026, string passCert)
         {
-
-            // Validar que los parámetros no sean nulos o vacíos
-            //if (string.IsNullOrEmpty(pathCert))
-            //    throw new ArgumentException("La ruta del certificado no puede ser nula o vacía.", nameof(pathCert));
-
             if (string.IsNullOrEmpty(passCert))
                 throw new ArgumentException("La contraseña del certificado no puede ser nula o vacía.", nameof(passCert));
-
-            // Validar que el archivo del certificado exista 
-            //if (!File.Exists(pathCert))
-            //    throw new FileNotFoundException($"No se encontró el archivo del certificado en la ruta: {pathCert}");
-
-            // var cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
-            // var certPruebas = GetCertificateFromStoreWINDOWS2("5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91");
 
             var cert = GetCertificateFromWINDOWS(thumprint2026);
 
@@ -423,25 +356,20 @@ namespace ConexionDGII
             XmlElement xmlFirmaDigital = signedXml.GetXml();
             xmlDoc.DocumentElement.AppendChild(xmlDoc.ImportNode(xmlFirmaDigital, true));
 
-            // Genera el hash SHA-256 de la firma digital en formato XML
             using (SHA256 sha256 = SHA256.Create())
             {
                 byte[] firmaBytes = Encoding.UTF8.GetBytes(xmlFirmaDigital.OuterXml);
                 byte[] hashBytes = sha256.ComputeHash(firmaBytes);
 
-                // Convierte el hash a una cadena hexadecimal
                 string hashHex = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
 
-                // Extrae los primeros 6 caracteres del hash
                 string codigoSeguridad = hashHex.Substring(0, 6);
 
-                // Modifica el nodo <CodigoSeguridadeCF> en el XML
                 XmlNode nodoCodigoSeguridad = xmlDoc.SelectSingleNode("//CodigoSeguridadeCF");
                 if (nodoCodigoSeguridad != null)
                 {
                     nodoCodigoSeguridad.InnerText = codigoSeguridad;
                 }
-                //this.codigoSeguridad = codigoSeguridad;
             }
 
             return xmlDoc;
@@ -463,23 +391,15 @@ namespace ConexionDGII
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    // Crear el contenido multipart/form-data
                     using (var form = new MultipartFormDataContent())
                     {
-                        // Leer el archivo XML
-                        //var fileContent = new ByteArrayContent(File.ReadAllBytes(filePath));
-
                         var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(_XMLSemillaFirmada));
                         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
 
-                        // Agregar el archivo al formulario con el nombre "xml"
                         form.Add(fileContent, "xml", Path.GetFileName(fileName));
 
-                        // Agregar encabezados
-                        // Agregar encabezados
                         client.DefaultRequestHeaders.Add("accept", "application/json");
 
-                        // Enviar la solicitud POST
                         HttpResponseMessage response = await client.PostAsync(urlValidarSemilla, form);
                         string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -490,16 +410,15 @@ namespace ConexionDGII
                             var json = JObject.Parse(responseBody);
                             _tokenGlobal = json["token"]?.ToString();
 
-                            // Llamar al método y recibir el JSON
                             string JsonFinal = await EnviarFacturaElectronica(urlRecepcionFactura, urlConsultaFactura);
-                            return JsonFinal; // Devolver el JSON recibido
+                            return JsonFinal;
 
                         }
                         else
                         {
                             Console.WriteLine(response.StatusCode);
                             Console.WriteLine(responseBody);
-                            return $"Error: {response.StatusCode} - {responseBody}"; // Devuelve error
+                            return $"Error: {response.StatusCode} - {responseBody}";
                         }
                     }
                 }
@@ -507,7 +426,7 @@ namespace ConexionDGII
             catch (Exception ex)
             {
                 Console.WriteLine($" Error: {ex.Message}");
-                return $" Error: {ex.Message}"; // Devuelve error como string
+                return $" Error: {ex.Message}";
 
             }
         }
@@ -522,26 +441,18 @@ namespace ConexionDGII
 
                 using (HttpClient client = new HttpClient())
                 {
-                    // Agregar el token de autorización
                     client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _tokenGlobal);
                     client.DefaultRequestHeaders.Add("accept", "application/json");
 
-                    // Crear el contenido multipart/form-data
                     using (var form = new MultipartFormDataContent())
                     {
-                        //// Leer el archivo XML
-                        //var fileContent = new ByteArrayContent(File.ReadAllBytes(_XMLFacturaFirmada));
-                        //fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
-
                         byte[] xmlBytes = Encoding.UTF8.GetBytes(_XMLFacturaFirmada);
 
                         var fileContent = new ByteArrayContent(xmlBytes);
                         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
 
-                        // Agregar el archivo al formulario
                         form.Add(fileContent, "xml", Path.GetFileName(xmlPath));
 
-                        // Enviar la solicitud POST
                         HttpResponseMessage response = await client.PostAsync(urlRecepcionFactura, form);
                         string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -552,9 +463,8 @@ namespace ConexionDGII
                             var json = JObject.Parse(responseBody);
                             _trackIdGlobal = json["trackId"]?.ToString();
 
-                            // ✅ Llamar al método y recibir el JSON
                             string estadoFacturaJson = await ConsultarEstadoFacturaElectronica(urlConsultaFactura);
-                            return estadoFacturaJson; // Devolver el JSON recibido
+                            return estadoFacturaJson;
 
                         }
                         else
@@ -562,7 +472,7 @@ namespace ConexionDGII
                             Console.WriteLine(response.StatusCode);
                             Console.WriteLine(responseBody);
 
-                            return $"Error: {response.StatusCode} - {responseBody}"; // Devuelve error
+                            return $"Error: {response.StatusCode} - {responseBody}";
 
                         }
                     }
@@ -571,7 +481,7 @@ namespace ConexionDGII
             catch (Exception ex)
             {
                 Console.WriteLine($" Error: {ex.Message}");
-                return $" Error: {ex.Message}"; // Devuelve error como string
+                return $" Error: {ex.Message}";
 
             }
         }
@@ -584,11 +494,9 @@ namespace ConexionDGII
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    // Agregar encabezados
                     client.DefaultRequestHeaders.Add("accept", "application/json");
                     client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_tokenGlobal}");
 
-                    // Enviar solicitud GET
                     HttpResponseMessage response = await client.GetAsync(url);
                     string responseBody = await response.Content.ReadAsStringAsync();
 
@@ -598,7 +506,7 @@ namespace ConexionDGII
 
                         var json = JObject.Parse(responseBody);
 
-                        return responseBody; // Devuelve el JSON como string
+                        return responseBody;
 
                     }
                     else
@@ -606,14 +514,14 @@ namespace ConexionDGII
                         Console.WriteLine(response.StatusCode);
                         Console.WriteLine(responseBody);
 
-                        return $"Error: {response.StatusCode} - {responseBody}"; // Retorna el mensaje de error
+                        return $"Error: {response.StatusCode} - {responseBody}";
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($" Error: {ex.Message}");
-                return $" Error: {ex.Message}"; // Retorna el error
+                return $" Error: {ex.Message}";
 
             }
         }

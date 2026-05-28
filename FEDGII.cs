@@ -21,6 +21,7 @@ namespace ConexionDGII
         private static string _trackIdGlobal;
         private static string _eNCFGlobal;
         private static string _RNCEmisorGlobal;
+        private static string _Root;
         private static string _eNCFGlobalAC;
         private static string _RNCEmisorGlobalAC;
 
@@ -28,7 +29,7 @@ namespace ConexionDGII
         private static string _XMLSemillaFirmada;
         private static string _XMLFactura;
         private static string _XMLFacturaFirmada;
-        private static string _CodigoSeguridad;
+        private static string _CodigoSeguridad = "";
 
         private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91";
 
@@ -137,6 +138,7 @@ namespace ConexionDGII
             {
                 HttpResponseMessage response = await client.GetAsync(urlSemilla);
                 string responseBody = await response.Content.ReadAsStringAsync();
+                string jsonString;
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -155,11 +157,40 @@ namespace ConexionDGII
                         token = _tokenGlobal, 
                         xmlfactura = _XMLFactura,
                         xmlfacturafirmada = _XMLFacturaFirmada,
-                        codigoseguridad = _CodigoSeguridad
+                        codigoseguridad = _CodigoSeguridad,
+                        root = _Root
                     };
 
-                    string jsonString = JsonConvert.SerializeObject(resultado);
+                    JObject resultadoDinamico = JObject.FromObject(resultado);
 
+                    if (_Root == "RFCE")
+                    {
+                        JObject innerJson = JObject.Parse(resultadoDinamico["json"].ToString());
+                        innerJson["RFCE"]["Encabezado"]["CodigoSeguridadeCF"] = _CodigoSeguridad;
+                        resultadoDinamico["json"] = innerJson.ToString(Newtonsoft.Json.Formatting.None);
+
+                        XmlDocument docXml = new XmlDocument();
+                        docXml.LoadXml(resultadoDinamico["xmlfacturafirmada"].ToString());
+
+                        XmlNode totalesNode = docXml.GetElementsByTagName("Totales")[0];
+                        XmlNode encabezadoNode = docXml.GetElementsByTagName("Encabezado")[0];
+
+                        if (totalesNode != null && encabezadoNode != null)
+                        {
+                            XmlElement codigoSeguridadNode = docXml.CreateElement("CodigoSeguridadeCF", docXml.DocumentElement.NamespaceURI);
+                            codigoSeguridadNode.InnerText = _CodigoSeguridad;
+
+                            encabezadoNode.InsertAfter(codigoSeguridadNode, totalesNode);
+                        }
+
+                        resultadoDinamico["xmlfacturafirmada"] = docXml.OuterXml;
+                        _XMLFacturaFirmada = docXml.OuterXml;
+                        jsonString = JsonConvert.SerializeObject(resultadoDinamico);
+                    } 
+                    else
+                    {
+                        jsonString = JsonConvert.SerializeObject(resultado);
+                    }
                     return jsonString;
                 }
                 else
@@ -189,8 +220,9 @@ namespace ConexionDGII
 
                 JObject jsonObj = JObject.Parse(jsonInvoiceFO);
 
-                _eNCFGlobal = jsonObj["ECF"]["Encabezado"]["IdDoc"]["eNCF"]?.ToString();
-                _RNCEmisorGlobal = jsonObj["ECF"]["Encabezado"]["Emisor"]["RNCEmisor"]?.ToString();
+                _eNCFGlobal = (jsonObj["ECF"]?["Encabezado"]?["IdDoc"]?["eNCF"] ?? jsonObj["RFCE"]?["Encabezado"]?["IdDoc"]?["eNCF"])?.ToString();
+                _RNCEmisorGlobal = (jsonObj["ECF"]?["Encabezado"]?["Emisor"]?["RNCEmisor"] ?? jsonObj["RFCE"]?["Encabezado"]?["Emisor"]?["RNCEmisor"])?.ToString();
+                _Root = jsonObj["ECF"] != null ? "ECF" : (jsonObj["RFCE"] != null ? "RFCE" : null);
 
                 XmlDocument xmlDocument = JsonConvert.DeserializeXmlNode(jsonInvoiceFO);
 

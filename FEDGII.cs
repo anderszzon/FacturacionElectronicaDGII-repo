@@ -160,49 +160,9 @@ namespace ConexionDGII
                         codigoseguridad = _CodigoSeguridad,
                         root = _Root
                     };
+          
+                    jsonString = JsonConvert.SerializeObject(resultado);
 
-                    JObject resultadoDinamico = JObject.FromObject(resultado);
-
-                    if (_Root == "RFCE")
-                    {
-                        JObject innerJson = JObject.Parse(resultadoDinamico["json"].ToString());
-                        innerJson["RFCE"]["Encabezado"]["CodigoSeguridadeCF"] = _CodigoSeguridad;
-                        resultadoDinamico["json"] = innerJson.ToString(Newtonsoft.Json.Formatting.None);
-
-                        XmlDocument docXml = new XmlDocument();
-                        docXml.LoadXml(resultadoDinamico["xmlfacturafirmada"].ToString());
-
-                        // 1. Buscamos si ya existe el nodo en el XML para sobreescribirlo
-                        XmlNode nodoCodigoExistente = docXml.SelectSingleNode("//CodigoSeguridadeCF");
-
-                        if (nodoCodigoExistente != null)
-                        {
-                            // Si ya existe (el "AAAAAA"), actualizamos su valor sin duplicar
-                            nodoCodigoExistente.InnerText = _CodigoSeguridad;
-                        }
-                        else
-                        {
-                            // 2. Si por algún motivo no existía en el JSON, lo creamos de respaldo
-                            XmlNode totalesNode = docXml.GetElementsByTagName("Totales")[0];
-                            XmlNode encabezadoNode = docXml.GetElementsByTagName("Encabezado")[0];
-
-                            if (totalesNode != null && encabezadoNode != null)
-                            {
-                                XmlElement codigoSeguridadNode = docXml.CreateElement("CodigoSeguridadeCF", docXml.DocumentElement.NamespaceURI);
-                                codigoSeguridadNode.InnerText = _CodigoSeguridad;
-
-                                encabezadoNode.InsertAfter(codigoSeguridadNode, totalesNode);
-                            }
-                        }
-
-                        resultadoDinamico["xmlfacturafirmada"] = docXml.OuterXml;
-                        _XMLFacturaFirmada = docXml.OuterXml;
-                        jsonString = JsonConvert.SerializeObject(resultadoDinamico);
-                    }
-                    else
-                    {
-                        jsonString = JsonConvert.SerializeObject(resultado);
-                    }
                     return jsonString;
                 }
                 else
@@ -270,11 +230,6 @@ namespace ConexionDGII
 
                 GetSignatureValueFromSignedXml(xmlDoc);
 
-                XmlNode nodoCodigo = xmlDoc.SelectSingleNode("//CodigoSeguridadeCF");
-                if (nodoCodigo != null)
-                {
-                    nodoCodigo.InnerText = _CodigoSeguridad;
-                }
                 string xmlFacturaFirmada = xmlDoc.OuterXml;
                 _XMLFacturaFirmada = xmlFacturaFirmada;
 

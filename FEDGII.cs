@@ -456,6 +456,11 @@ namespace ConexionDGII
                         {
                             Console.WriteLine(responseBody);
 
+                            if (_Root == "RFCE")
+                            {
+
+                            }
+
                             var json = JObject.Parse(responseBody);
                             _trackIdGlobal = json["trackId"]?.ToString();
 

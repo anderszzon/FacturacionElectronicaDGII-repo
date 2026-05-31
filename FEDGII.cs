@@ -444,7 +444,7 @@ namespace ConexionDGII
                     {
                         byte[] xmlBytes = Encoding.UTF8.GetBytes(_XMLFacturaFirmada);
 
-                        var fileContent = new ByteArrayContent(xmlBytes);
+                        var fileContent = new ByteArrayContent(xmlBytes);   
                         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
 
                         form.Add(fileContent, "xml", Path.GetFileName(xmlPath));

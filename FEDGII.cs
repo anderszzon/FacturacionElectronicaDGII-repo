@@ -38,6 +38,11 @@ namespace ConexionDGII
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();
         }
 
+        public static string ObtenerFacturaAprobacionComercialSincrona(string urlSemilla, string passCert, string jsonFactura)
+        {
+            return ObtenerSemillaAprobacionComercial(urlSemilla, passCert, jsonFactura).GetAwaiter().GetResult();
+        }
+
         private static X509Certificate2 GetCertificateFromWINDOWS(string thumbprint)
         {
             using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
@@ -173,6 +178,47 @@ namespace ConexionDGII
             }
         }
 
+        public static async Task<string> ObtenerSemillaAprobacionComercial(string urlSemilla, string passCert,string jsonFactura)
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage response = await client.GetAsync(urlSemilla);
+                string responseBody = await response.Content.ReadAsStringAsync();
+                string jsonString;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string xmlSemilla = await response.Content.ReadAsStringAsync();
+
+                    _XMLSemilla = xmlSemilla;
+
+                    string JsonEnviado = await FirmarSemillaAprobacionComercial(passCert, jsonFactura);
+
+                    var resultado = new
+                    {
+                        json = JsonEnviado,
+                        encf = _eNCFGlobal,
+                        xmlsemilla = _XMLSemilla,
+                        xmlsemillafirmada = _XMLSemillaFirmada,
+                        token = _tokenGlobal,
+                        xmlfactura = _XMLFactura,
+                        xmlfacturafirmada = _XMLFacturaFirmada,
+                        codigoseguridad = _CodigoSeguridad,
+                        root = _Root
+                    };
+
+                    jsonString = JsonConvert.SerializeObject(resultado);
+
+                    return jsonString;
+                }
+                else
+                {
+                    Console.WriteLine($"Error al obtener el XML Código: {response.StatusCode}");
+                    return $"Error: {response.StatusCode} - {responseBody}";
+                }
+            }
+        }
+
         public static async Task<string> FirmarSemilla(string passCert, string jsonInvoiceFO)
         {
 
@@ -214,6 +260,50 @@ namespace ConexionDGII
             {
                 Console.WriteLine("Error: " + ex.Message);
                 return $"Error: {ex.Message}"; 
+
+            }
+        }
+
+        public static async Task<string> FirmarSemillaAprobacionComercial(string passCert, string jsonFactura)
+        {
+            try
+            {
+
+                XmlDocument xmlDoc = new XmlDocument();
+
+                xmlDoc.LoadXml(_XMLSemilla);
+
+                SignXmlSeed(xmlDoc, thumbprint2026, passCert);
+
+                string xmlSemillaFirmada = xmlDoc.OuterXml;
+                _XMLSemillaFirmada = xmlSemillaFirmada;
+
+                Console.WriteLine(_XMLSemillaFirmada);
+
+                JObject jsonObj = JObject.Parse(jsonFactura);
+
+                _eNCFGlobal = (jsonObj["ECF"]?["Encabezado"]?["IdDoc"]?["eNCF"] ?? jsonObj["RFCE"]?["Encabezado"]?["IdDoc"]?["eNCF"])?.ToString();
+                _RNCEmisorGlobal = (jsonObj["ECF"]?["Encabezado"]?["Emisor"]?["RNCEmisor"] ?? jsonObj["RFCE"]?["Encabezado"]?["Emisor"]?["RNCEmisor"])?.ToString();
+                _Root = jsonObj["ECF"] != null ? "ECF" : (jsonObj["RFCE"] != null ? "RFCE" : null);
+
+                XmlDocument xmlDocument = JsonConvert.DeserializeXmlNode(jsonFactura);
+
+                XmlDeclaration xmlDeclaration = xmlDocument.CreateXmlDeclaration("1.0", "utf-8", null);
+                XmlElement root = xmlDocument.DocumentElement;
+                xmlDocument.InsertBefore(xmlDeclaration, root);
+
+                string xmlFactura = xmlDocument.OuterXml;
+                _XMLFactura = xmlFactura;
+
+                string xmlFacturaFirmada = await FirmarFactura(passCert);
+
+                return jsonFactura;
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                return $"Error: {ex.Message}";
 
             }
         }
@@ -378,6 +468,11 @@ namespace ConexionDGII
             return ValidarSemilla(urlValidarSemilla, urlRecepcionFactura, urlConsultaFactura).GetAwaiter().GetResult();
         }
 
+        public static string EnviarFacturaElectronicaAprobacionComercialSincrona(string urlValidarSemilla, string urlRecepcionFacturaAprobacionComercial, string urlConsultaFactura)
+        {
+            return ValidarSemillaAprobacionComercial(urlValidarSemilla, urlRecepcionFacturaAprobacionComercial, urlConsultaFactura).GetAwaiter().GetResult();
+        }
+
         public static async Task<string> ValidarSemilla(string urlValidarSemilla, string urlRecepcionFactura, string urlConsultaFactura)
         {
 
@@ -407,6 +502,55 @@ namespace ConexionDGII
                             _tokenGlobal = json["token"]?.ToString();
 
                             string JsonFinal = await EnviarFacturaElectronica(urlRecepcionFactura, urlConsultaFactura);
+                            return JsonFinal;
+
+                        }
+                        else
+                        {
+                            Console.WriteLine(response.StatusCode);
+                            Console.WriteLine(responseBody);
+                            return $"Error: {response.StatusCode} - {responseBody}";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Error: {ex.Message}");
+                return $" Error: {ex.Message}";
+
+            }
+        }
+
+        public static async Task<string> ValidarSemillaAprobacionComercial(string urlValidarSemilla, string urlRecepcionFacturaAprobacionComercial, string urlConsultaFactura)
+        {
+
+            string fileName = "semillaFirmada.xml";
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(_XMLSemillaFirmada));
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
+
+                        form.Add(fileContent, "xml", Path.GetFileName(fileName));
+
+                        client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                        HttpResponseMessage response = await client.PostAsync(urlValidarSemilla, form);
+                        string responseBody = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(responseBody);
+
+                            var json = JObject.Parse(responseBody);
+                            _tokenGlobal = json["token"]?.ToString();
+
+                            string JsonFinal = await EnviarFacturaElectronicaAprobacionComercial(urlRecepcionFacturaAprobacionComercial, urlConsultaFactura);
                             return JsonFinal;
 
                         }
@@ -487,6 +631,57 @@ namespace ConexionDGII
             }
         }
 
+        public static async Task<string> EnviarFacturaElectronicaAprobacionComercial(string urlRecepcionFacturaAprobacionComercial, string urlConsultaFactura)
+        {
+
+            string xmlPath = $"{_RNCEmisorGlobal}{_eNCFGlobal}.xml";
+
+            try
+            {
+
+                using (HttpClient client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _tokenGlobal);
+                    client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        byte[] xmlBytes = Encoding.UTF8.GetBytes(_XMLFacturaFirmada);
+
+                        var fileContent = new ByteArrayContent(xmlBytes);
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
+
+                        form.Add(fileContent, "xml", Path.GetFileName(xmlPath));
+
+                        HttpResponseMessage response = await client.PostAsync(urlRecepcionFacturaAprobacionComercial, form);
+                        string responseBody = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(responseBody);
+                            var json = JObject.Parse(responseBody);
+                            return responseBody;
+
+                        }
+                        else
+                        {
+                            Console.WriteLine(response.StatusCode);
+                            Console.WriteLine(responseBody);
+
+                            return $"Error: {response.StatusCode} - {responseBody}";
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Error: {ex.Message}");
+                return $" Error: {ex.Message}";
+
+            }
+        }
+
         public static async Task<string> ConsultarEstadoFacturaElectronica(string urlConsultaFactura)
         {
             string url = $"{urlConsultaFactura}?TrackId={_trackIdGlobal}";
@@ -523,123 +718,6 @@ namespace ConexionDGII
             {
                 Console.WriteLine($" Error: {ex.Message}");
                 return $" Error: {ex.Message}";
-
-            }
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public static async Task<string> FirmarAprobacionComercial(string passCert)
-        {
-            string xmlPath = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.xml";  // Ruta donde tienes tu semilla
-            string signedXmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobalAC}{_eNCFGlobalAC}.xml"; // Archivo firmado
-            //string pathCert = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\20250130-2113054-YAD25P5MJ.p12"; // Ruta de tu certificado
-
-            string invoice;
-
-            try
-            {
-                // X509Certificate2 cert = new X509Certificate2(pathCert, passCert, X509KeyStorageFlags.Exportable);
-
-                XmlDocument xmlDoc = new XmlDocument();
-                //xmlDoc.PreserveWhitespace = true;
-                xmlDoc.Load(xmlPath);
-
-                //SignXmlRepo(xmlDoc, pathCert, passCert);
-
-
-                SignXmlSeed(xmlDoc, thumbprint2026, passCert);
-
-
-                // Guardar el XML firmado
-                xmlDoc.Save(signedXmlPath);
-                Console.WriteLine("XML firmado y guardado en: " + signedXmlPath);
-
-                invoice = "Aprobacion Comercial Firmada";
-                return invoice;
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error: " + ex.Message);
-                return $"Error: {ex.Message}";
-            }
-        }
-
-        public static async Task RecepcionAprobacionComercial(string passCert)
-        {
-            string urlRecepcionFactura = "https://ecf.dgii.gov.do/certecf/AprobacionComercial/api/AprobacionComercial";
-
-            string jsonPathAC = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.json"; // Ruta del JSON
-            string filePathAC = "C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\aprobacioncomercial.xml"; // Ruta donde guardar el archivo
-
-            string xmlPath = $"C:\\Users\\andersonmgordilloh\\source\\repos\\FacturacionElectronicaDGII\\ArchivosDGII\\{_RNCEmisorGlobalAC}{_eNCFGlobalAC}.xml"; // Ruta del XML
-
-            try
-            {
-                ////////////////////////////////////////////////////Leer el archivo de Aprobacion Comercial JSON a XML///////////////////////////////////////////////////////////////////////////
-
-                string jsonContentAC = File.ReadAllText(jsonPathAC);
-
-                JObject jsonObjAC = JObject.Parse(jsonContentAC); // Convertir JSON a JObject
-
-                _eNCFGlobalAC = jsonObjAC["ACECF"]["DetalleAprobacionComercial"]["eNCF"]?.ToString();
-                _RNCEmisorGlobalAC = jsonObjAC["ACECF"]["DetalleAprobacionComercial"]["RNCEmisor"]?.ToString();
-
-                XmlDocument xmlDocumentAC = JsonConvert.DeserializeXmlNode(jsonContentAC);
-
-                // Agregar la declaración XML estándar
-                XmlDeclaration xmlDeclarationAC = xmlDocumentAC.CreateXmlDeclaration("1.0", "utf-8", null);
-                XmlElement rootAC = xmlDocumentAC.DocumentElement;
-                xmlDocumentAC.InsertBefore(xmlDeclarationAC, rootAC);
-
-                // Guardar el XML en un archivo con la declaración XML
-                using (XmlWriter writer = XmlWriter.Create(filePathAC, new XmlWriterSettings { Indent = true, Encoding = System.Text.Encoding.UTF8 }))
-                {
-                    xmlDocumentAC.WriteTo(writer);
-                }
-
-                await FirmarAprobacionComercial(passCert);
-
-                ////////////////////////////////////////////////////Leer el archivo de Aprobacion Comercial JSON a XML///////////////////////////////////////////////////////////////////////////
-
-                using (HttpClient client = new HttpClient())
-                {
-                    // Agregar el token de autorización
-                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _tokenGlobal);
-                    client.DefaultRequestHeaders.Add("accept", "application/json");
-
-                    // Crear el contenido multipart/form-data
-                    using (var form = new MultipartFormDataContent())
-                    {
-                        // Leer el archivo XML
-                        var fileContent = new ByteArrayContent(File.ReadAllBytes(xmlPath));
-                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
-
-                        // Agregar el archivo al formulario
-                        form.Add(fileContent, "xml", Path.GetFileName(xmlPath));
-
-                        // Enviar la solicitud POST
-                        HttpResponseMessage response = await client.PostAsync(urlRecepcionFactura, form);
-                        string responseBody = await response.Content.ReadAsStringAsync();
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            Console.WriteLine(responseBody);
-
-                            var json = JObject.Parse(responseBody);
-                        }
-                        else
-                        {
-                            Console.WriteLine(response.StatusCode);
-                            Console.WriteLine(responseBody);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($" Error: {ex.Message}");
 
             }
         }

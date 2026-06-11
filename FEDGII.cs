@@ -598,19 +598,21 @@ namespace ConexionDGII
 
                         if (response.IsSuccessStatusCode)
                         {
-                            Console.WriteLine(responseBody);
-
                             if (_Root == "RFCE")
                             {
-
+                                Console.WriteLine(responseBody);
+                                var json = JObject.Parse(responseBody);
+                                return responseBody;
                             }
+                            else
+                            {
+                                Console.WriteLine(responseBody);
+                                var json = JObject.Parse(responseBody);
+                                _trackIdGlobal = json["trackId"]?.ToString();
 
-                            var json = JObject.Parse(responseBody);
-                            _trackIdGlobal = json["trackId"]?.ToString();
-
-                            string estadoFacturaJson = await ConsultarEstadoFacturaElectronica(urlConsultaFactura);
-                            return estadoFacturaJson;
-
+                                string estadoFacturaJson = await ConsultarEstadoFacturaElectronica(urlConsultaFactura);
+                                return estadoFacturaJson;
+                            }
                         }
                         else
                         {

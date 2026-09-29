@@ -33,6 +33,10 @@ namespace ConexionDGII
 
         private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91";
 
+        /// Variables como proveedor de servicios de facturación electrónica
+        /// 
+
+
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();

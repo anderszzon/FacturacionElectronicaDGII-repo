@@ -1,16 +1,17 @@
-﻿using System.IO;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
-using System.Xml;
-using Newtonsoft.Json.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Xml;
-using Newtonsoft.Json;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 
 namespace ConexionDGII
 {
@@ -33,8 +34,31 @@ namespace ConexionDGII
 
         private static string thumbprint2026 = "5F5017E1810EBEAF9DAE0AD482C252F4AC19CA91";
 
-        /// Variables como proveedor de servicios de facturación electrónica
-        /// 
+        /// <summary>
+        /// Obtiene únicamente el contenido XML de la Semilla desde la URL de la DGII.
+        /// </summary>
+        public static async Task<string> ObtenerSemillaXmlAsync(string urlSemilla, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(urlSemilla))
+            {
+                throw new ArgumentNullException(nameof(urlSemilla), "La URL de la semilla no puede estar vacía.");
+            }
+
+            using (var request = new HttpRequestMessage(HttpMethod.Get, urlSemilla))
+            {
+                using (var response = await _httpClient.SendAsync(request, cancellationToken))
+                {
+                    string responseBody = await response.Content.ReadAsStringAsync();
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new HttpRequestException($"Error al consumir la Semilla DGII. Código HTTP: {response.StatusCode}. Respuesta: {responseBody}");
+                    }
+
+                    return responseBody;
+                }
+            }
+        }
 
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)

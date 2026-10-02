@@ -60,6 +60,116 @@ namespace ConexionDGII
             }
         }
 
+        public static async Task<string> ValidarCertificadoXmlAsync(string urlValidacion, string xmlSemillaFirmada, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(urlValidacion))
+            {
+                throw new ArgumentNullException(nameof(urlValidacion), "La URL de validación no puede estar vacía.");
+            }
+
+            if (string.IsNullOrWhiteSpace(xmlSemillaFirmada))
+            {
+                throw new ArgumentException("El contenido del XML firmado es requerido.", nameof(xmlSemillaFirmada));
+            }
+
+            string fileName = "semillaFirmada.xml";
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(xmlSemillaFirmada));
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
+
+                        form.Add(fileContent, "xml", Path.GetFileName(fileName));
+
+                        client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                        HttpResponseMessage response = await client.PostAsync(urlValidacion, form);
+                        string responseBody = await response.Content.ReadAsStringAsync();
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            throw new HttpRequestException($"Error al validar certificado en DGII. Código HTTP: {response.StatusCode}. Respuesta: {responseBody}");
+                        }
+
+                        return responseBody;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Error: {ex.Message}");
+                throw;
+            }
+        }
+
+        public static async Task<string> EnviarFacturaElectronicaAsync(
+                                                                        string urlRecepcionFactura,
+                                                                        string xmlFacturaFirmada,
+                                                                        string tokenBearer,
+                                                                        string nombreArchivoXml = "ecf.xml",
+                                                                        CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(urlRecepcionFactura))
+            {
+                throw new ArgumentNullException(nameof(urlRecepcionFactura), "La URL de recepción no puede estar vacía.");
+            }
+
+            if (string.IsNullOrWhiteSpace(xmlFacturaFirmada))
+            {
+                throw new ArgumentException("El contenido del XML de la factura es requerido.", nameof(xmlFacturaFirmada));
+            }
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    // Limpiar y formatear el token Bearer
+                    string tokenLimpio = tokenBearer?.Trim() ?? string.Empty;
+                    if (tokenLimpio.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tokenLimpio = tokenLimpio.Substring(7).Trim();
+                    }
+
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenLimpio);
+                    client.DefaultRequestHeaders.Add("accept", "application/json");
+
+                    using (var form = new MultipartFormDataContent())
+                    {
+                        byte[] xmlBytes = Encoding.UTF8.GetBytes(xmlFacturaFirmada);
+
+                        var fileContent = new ByteArrayContent(xmlBytes);
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
+
+                        // Asignar el contenido al parámetro 'xml' con el nombre del archivo
+                        form.Add(fileContent, "xml", Path.GetFileName(nombreArchivoXml));
+
+                        HttpResponseMessage response = await client.PostAsync(urlRecepcionFactura, form, cancellationToken);
+                        string responseBody = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine(responseBody);
+                            return responseBody;
+                        }
+                        else
+                        {
+                            Console.WriteLine(response.StatusCode);
+                            Console.WriteLine(responseBody);
+                            return $"Error: {response.StatusCode} - {responseBody}";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" Error: {ex.Message}");
+                return $" Error: {ex.Message}";
+            }
+        }
 
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {

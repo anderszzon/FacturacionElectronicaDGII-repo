@@ -171,6 +171,75 @@ namespace ConexionDGII
             }
         }
 
+
+        /// <summary>
+        /// Firma digitalmente un XML de Acuse de Recibo (ARECF) utilizando el certificado del almacén de Windows.
+        /// </summary>
+        /// <param name="xmlAcuseSinFirmar">Cadena XML con la estructura del ARECF sin firmar.</param>
+        /// <param name="passCert">Contraseña del certificado (si aplica) o cadena vacía.</param>
+        /// <returns>XML del Acuse de Recibo firmado con el nodo &lt;Signature&gt; incluido.</returns>
+        public static string FirmarAcuseRecibo(string xmlAcuseSinFirmar, string passCert = "")
+        {
+            try
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.PreserveWhitespace = true;
+                xmlDoc.LoadXml(xmlAcuseSinFirmar);
+
+                var cert = GetCertificateFromWINDOWS(thumbprint2026);
+
+                if (cert == null)
+                    throw new Exception("No se encontró el certificado digital en el almacén de Windows.");
+
+                if (cert.PrivateKey == null)
+                    throw new Exception("El certificado no contiene una clave privada.");
+
+                var key = cert.GetRSAPrivateKey();
+
+                if (key == null)
+                    throw new Exception("No se pudo obtener la clave privada RSA del certificado.");
+
+                var signedXml = new SignedXml(xmlDoc)
+                {
+                    SigningKey = key
+                };
+
+                // Algoritmo exigido por la DGII: RSA-SHA256
+                signedXml.SignedInfo.SignatureMethod = SignedXml.XmlDsigRSASHA256Url;
+
+                // Referencia al documento completo
+                var reference = new Reference
+                {
+                    Uri = "",
+                    DigestMethod = "http://www.w3.org/2001/04/xmlenc#sha256"
+                };
+
+                // Transformación Enveloped Signature
+                reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
+                signedXml.AddReference(reference);
+
+                // Inclusión del KeyInfo con datos X509
+                var keyInfo = new KeyInfo();
+                keyInfo.AddClause(new KeyInfoX509Data(cert));
+                signedXml.KeyInfo = keyInfo;
+
+                // Calcular firma y adjuntar al XML
+                signedXml.ComputeSignature();
+                XmlElement xmlFirmaDigital = signedXml.GetXml();
+                xmlDoc.DocumentElement.AppendChild(xmlDoc.ImportNode(xmlFirmaDigital, true));
+
+                return xmlDoc.OuterXml;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error al firmar Acuse de Recibo: " + ex.Message);
+                throw new Exception($"Error en FirmarAcuseRecibo: {ex.Message}", ex);
+            }
+        }
+
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public static string EnviarTokenSincrona(string urlSemilla, string passCert, string jsonInvoiceFO)
         {
             return ObtenerSemilla(urlSemilla, passCert, jsonInvoiceFO).GetAwaiter().GetResult();

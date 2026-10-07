@@ -182,8 +182,10 @@ namespace ConexionDGII
         {
             try
             {
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.PreserveWhitespace = true;
+                XmlDocument xmlDoc = new XmlDocument
+                {
+                    PreserveWhitespace = true
+                };
                 xmlDoc.LoadXml(xmlAcuseSinFirmar);
 
                 var cert = GetCertificateFromWINDOWS(thumbprint2026);
@@ -204,7 +206,8 @@ namespace ConexionDGII
                     SigningKey = key
                 };
 
-                // Algoritmo exigido por la DGII: RSA-SHA256
+                // Algoritmo de canonicalización de SignedInfo y Firma RSA-SHA256
+                signedXml.SignedInfo.CanonicalizationMethod = SignedXml.XmlDsigC14NTransformUrl;
                 signedXml.SignedInfo.SignatureMethod = SignedXml.XmlDsigRSASHA256Url;
 
                 // Referencia al documento completo
@@ -214,16 +217,17 @@ namespace ConexionDGII
                     DigestMethod = "http://www.w3.org/2001/04/xmlenc#sha256"
                 };
 
-                // Transformación Enveloped Signature
+                // ÚNICA TRANSFORMACIÓN: Enveloped Signature (tal como la herramienta DGII)
                 reference.AddTransform(new XmlDsigEnvelopedSignatureTransform());
+
                 signedXml.AddReference(reference);
 
-                // Inclusión del KeyInfo con datos X509
+                // KeyInfo con X509Data
                 var keyInfo = new KeyInfo();
                 keyInfo.AddClause(new KeyInfoX509Data(cert));
                 signedXml.KeyInfo = keyInfo;
 
-                // Calcular firma y adjuntar al XML
+                // Calcular firma
                 signedXml.ComputeSignature();
                 XmlElement xmlFirmaDigital = signedXml.GetXml();
                 xmlDoc.DocumentElement.AppendChild(xmlDoc.ImportNode(xmlFirmaDigital, true));
